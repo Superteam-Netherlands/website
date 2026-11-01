@@ -10,7 +10,7 @@ vi.mock("@/lib/hq/db", () => ({ getSql: mocks.getSql }));
 
 import { Dashboard } from "@/components/hq/dashboard";
 import { BuilderStore } from "@/lib/hq/builder-store";
-import { getClassifiers, getDashboardProjects, getHackathon, getHackathons, getLumaSyncedAt, getProjects, getSettings, searchAll } from "@/lib/hq/queries";
+import { getClassifiers, getDashboardProjects, getHackathon, getHackathons, getProjects, getSettings, searchAll } from "@/lib/hq/queries";
 import { createMigratedDatabase, pgliteBuilderDatabase } from "./helpers/db";
 
 const IMPORTED = "00000000-0000-4000-8000-000000000011";
@@ -122,13 +122,6 @@ describe("narrow HQ reads", () => {
     expect(statements).toHaveLength(0);
   });
 
-  it("preserves timestamp precision from the pg Date parser and retains the never-synced sentinel", async () => {
-    await db.query("UPDATE hq_luma_sync SET last_success_at='2026-09-16T11:00:00.789Z' WHERE id=true");
-    expect(await getLumaSyncedAt()).toBe("2026-09-16T11:00:00.789Z");
-    await db.query("UPDATE hq_luma_sync SET last_success_at='epoch' WHERE id=true");
-    expect(await getLumaSyncedAt()).toBeNull();
-  });
-
   it("does not keep reference reads cached outside a React server render", async () => {
     expect((await getHackathon(11))?.name).toBe("Current edition");
     await db.query("UPDATE hq_hackathons SET name='Updated edition' WHERE id=11");
@@ -178,8 +171,6 @@ describe("batched search", () => {
       { kind: "Partner", label: "Needle older partner", meta: "Search channel" },
       { kind: "Person", label: "Needle newer person", meta: "Search role" },
       { kind: "Person", label: "Needle older person", meta: "Search role" },
-      { kind: "Event", label: "Needle earlier event", meta: "Sep 18" },
-      { kind: "Event", label: "Needle later event", meta: "Sep 19" },
     ]);
     expect((await searchAll("leader-only-match", 11)).map(hit => hit.id)).toEqual([IMPORTED]);
     expect((await searchAll("captain-only-match", 11)).every(hit => hit.kind === "Partner")).toBe(true);

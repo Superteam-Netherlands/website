@@ -57,7 +57,6 @@ describe("every server action authenticates", () => {
     "capabilities.ts": "operator",
     "captains.ts": "operator",
     "demo.ts": "operator",
-    "events.ts": "operator",
     "hackathons.ts": "operator",
     "invite.ts": "member",
     // Phase 8's authenticated manual retry of the scheduled reminder and
@@ -179,7 +178,7 @@ describe("the scheduled job endpoint is its own boundary", () => {
     expect(source).toMatch(/status: 401/);
   });
 
-  it("uses its own audience and its own workflow file, not the Luma sync's", () => {
+  it("uses its own audience and its own workflow file", () => {
     const auth = readFileSync(join(ROOT, "lib/hq/github-actions-auth.ts"), "utf8");
     expect(auth).toMatch(/HQ_JOBS_AUDIENCE = "stnl-hq-jobs"/);
     expect(auth).toMatch(/HQ_JOBS_JOB: ScheduledJob = \{ audience: HQ_JOBS_AUDIENCE, workflow: "hq-jobs\.yml" \}/);

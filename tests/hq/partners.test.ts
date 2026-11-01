@@ -34,7 +34,7 @@ const classifiers: Classifiers = {
     { id: "ch2", label: "Ecosystem" },
     { id: "ch3", label: "Corporate" },
   ],
-  eventTypes: [],
+ 
   roles: [],
   stages: [
     { id: "st1", slug: "draft", label: "Draft", dropColor: "#8a8579" },

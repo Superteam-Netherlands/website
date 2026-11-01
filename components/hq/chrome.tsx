@@ -18,7 +18,6 @@ const TABS: Array<{ href: string; label: string }> = [
   { href: "/hq/projects", label: "Projects" },
   { href: "/hq/partners", label: "Partners" },
   { href: "/hq/people", label: "People" },
-  { href: "/hq/events", label: "Events" },
 ];
 
 /**

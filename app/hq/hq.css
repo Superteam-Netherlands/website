@@ -120,12 +120,6 @@
 .hq .hq-slide-in {
   animation: hq-slide-in 240ms cubic-bezier(0.32, 0.72, 0, 1);
 }
-.hq .hq-sync-icon {
-  display: block;
-}
-.hq .hq-sync-icon-active {
-  animation: hq-sync-spin 800ms linear infinite;
-}
 .hq .hq-button-spinner {
   width: 16px;
   height: 16px;

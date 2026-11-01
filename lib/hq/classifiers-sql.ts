@@ -1,11 +1,11 @@
 import type { Classifiers } from "./types";
 
 /**
- * The eight classifier tables are small, ordered, and read by nearly every HQ
- * page. Aggregating them server-side turns eight round trips into one. `sort` orders
+ * The seven classifier tables are small, ordered, and read by nearly every HQ
+ * page. Aggregating them server-side turns seven round trips into one. `sort` orders
  * each aggregate and is then dropped from the payload.
  *
- * Seven lists are shared by every hackathon; the submission gates belong to
+ * Six lists are shared by every hackathon; the submission gates belong to
  * one, so the statement takes the hackathon id as its single parameter.
  *
  * Kept out of queries.ts (which is "server-only") so tests can run the real
@@ -13,7 +13,6 @@ import type { Classifiers } from "./types";
  */
 const CLASSIFIER_LISTS: Array<{ key: string; columns: string; table: string; where?: string }> = [
   { key: "channels", columns: "id, label", table: "hq_partner_channels" },
-  { key: "event_types", columns: "id, label, supports_end_date", table: "hq_event_types" },
   {
     key: "roles",
     columns: "id, label, filter_label, color, bg, is_judge",
@@ -51,11 +50,6 @@ export function toClassifiers(row: Record<string, unknown>): Classifiers {
   const list = (key: string): JsonRow[] => (row[key] as JsonRow[] | null) ?? [];
   return {
     channels: list("channels").map((r) => ({ id: text(r.id), label: text(r.label) })),
-    eventTypes: list("event_types").map((r) => ({
-      id: text(r.id),
-      label: text(r.label),
-      supportsEndDate: Boolean(r.supports_end_date),
-    })),
     roles: list("roles").map((r) => ({
       id: text(r.id),
       label: text(r.label),

@@ -19,14 +19,13 @@ vi.mock("pg", () => ({ Pool: class {
   }; }
 } }));
 
-import { updateEvent } from "@/lib/hq/actions/events";
 import { updatePartnerDetail } from "@/lib/hq/actions/partners";
 import { updatePerson } from "@/lib/hq/actions/people";
 import { updateProjectDetail } from "@/lib/hq/actions/projects";
 
 const id = (suffix: number) => `00000000-0000-4000-8000-${String(suffix).padStart(12, "0")}`;
-const OPERATOR = id(1), PROJECT = id(2), EVENT = id(3), PERSON = id(4), PARTNER = id(5), FOREIGN_PARTNER = id(6);
-const CHANNEL = id(7), OTHER_CHANNEL = id(8), EVENT_TYPE = id(9), ROLE = id(10);
+const OPERATOR = id(1), PROJECT = id(2), PERSON = id(4), PARTNER = id(5), FOREIGN_PARTNER = id(6);
+const CHANNEL = id(7), OTHER_CHANNEL = id(8), ROLE = id(10);
 const rows = async (sql: string, values: unknown[] = []) => (await state.pg!.query(sql, values)).rows;
 
 beforeAll(async () => {
@@ -35,7 +34,6 @@ beforeAll(async () => {
   await state.pg.exec(`
     INSERT INTO hq_users(id,username,display_name,password_hash) VALUES('${OPERATOR}','operator','Operator','unused');
     INSERT INTO hq_partner_channels(id,label) VALUES('${CHANNEL}','Community'),('${OTHER_CHANNEL}','University');
-    INSERT INTO hq_event_types(id,label) VALUES('${EVENT_TYPE}','Workshop');
     INSERT INTO hq_people_roles(id,label,filter_label,color,bg) VALUES('${ROLE}','Guest','Guests','green','green');
     INSERT INTO hq_project_statuses(slug,label,color) VALUES('green','Green','green');
     INSERT INTO hq_project_forecasts(slug,label,color) VALUES('likely','Likely','green');
@@ -55,27 +53,12 @@ beforeEach(async () => {
       SELECT '${FOREIGN_PARTNER}',12,'Foreign','${CHANNEL}',id FROM hq_partner_stages WHERE slug='rejected';
     INSERT INTO hq_projects(id,hackathon_id,name,lead_name,status_id,forecast_id,last_check_in)
       SELECT '${PROJECT}',11,'Project','Lead',s.id,f.id,'2026-09-14' FROM hq_project_statuses s CROSS JOIN hq_project_forecasts f;
-    INSERT INTO hq_events(id,hackathon_id,name,date,end_date,type_id,venue,luma_id)
-      VALUES('${EVENT}',11,'Event','2026-09-14','2026-09-15','${EVENT_TYPE}','Original venue','luma-event');
     INSERT INTO hq_people(id,hackathon_id,name,role_id) VALUES('${PERSON}',11,'Person','${ROLE}');
   `);
 });
 afterAll(async () => { await state.pg?.close(); vi.unstubAllEnvs(); });
 
 describe("operator field edits", () => {
-  it("updates only the requested event field and pins Luma fields once", async () => {
-    expect(await updateEvent(EVENT, { field: "name", value: "  Renamed event  " })).toEqual({ ok: true });
-    expect(await updateEvent(EVENT, { field: "name", value: "Second name" })).toEqual({ ok: true });
-    expect(await updateEvent(EVENT, { field: "spend", value: 125 })).toEqual({ ok: true });
-    expect(await updateEvent(EVENT, { field: "endDate", value: null })).toEqual({ ok: true });
-    expect(await rows("SELECT name,date::text,end_date,venue,spend,attendance,pinned_fields FROM hq_events")).toEqual([{
-      name: "Second name", date: "2026-09-14", end_date: null, venue: "Original venue", spend: 125, attendance: 0,
-      pinned_fields: ["name", "end_date"],
-    }]);
-    expect(await rows("SELECT count(*)::int AS n FROM hq_activity")).toEqual([{ n: 4 }]);
-    expect(state.refresh).toHaveBeenCalledTimes(4);
-  });
-
   it("preserves project attribution rules, touches, and rename activity", async () => {
     expect(await updateProjectDetail(PROJECT, { field: "name", value: "  New project  " })).toEqual({ ok: true });
     expect(await updateProjectDetail(PROJECT, { field: "partnerId", value: PARTNER })).toEqual({ ok: true });
@@ -107,11 +90,10 @@ describe("operator field edits", () => {
   });
 
   it.each([
-    ["event", () => updateEvent(EVENT, { field: "name", value: "Changed" }), "hq_events"],
     ["project", () => updateProjectDetail(PROJECT, { field: "name", value: "Changed" }), "hq_projects"],
     ["person", () => updatePerson(PERSON, { field: "name", value: "Changed" }), "hq_people"],
     ["partner", () => updatePartnerDetail(PARTNER, { field: "name", value: "Changed" }), "hq_partners"],
-  ] as const)("rolls back the %s edit, touches and pins when its activity write fails", async (_, action, table) => {
+  ] as const)("rolls back the %s edit and touches when its activity write fails", async (_, action, table) => {
     const before = await rows(`SELECT * FROM ${table} ORDER BY id`);
     state.failAudit = true;
     await expect(action()).rejects.toThrow("Audit unavailable");

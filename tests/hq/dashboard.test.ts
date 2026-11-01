@@ -32,7 +32,7 @@ const settings: Settings = {
 
 const classifiers: Classifiers = {
   channels: [],
-  eventTypes: [],
+ 
   roles: [],
   stages: [],
   statuses: [],

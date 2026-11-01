@@ -5,8 +5,6 @@ import { realEmail } from "./builder-store";
 import { listActiveCapabilitiesForUsers, personTags } from "./capabilities";
 import { CLASSIFIERS_SELECT, toClassifiers } from "./classifiers-sql";
 import { getSql } from "./db";
-import { attributeOutputs, type AttributableProject } from "./event-attribution";
-import { fmtDate } from "./format";
 import type {
   ActivityItem,
   Award,
@@ -15,7 +13,6 @@ import type {
   DemoProject,
   FinalistProject,
   Hackathon,
-  HqEvent,
   Judge,
   Milestone,
   Partner,
@@ -406,78 +403,6 @@ export async function getPeople(hackathonId: number): Promise<Person[]> {
   });
 }
 
-/**
- * When the Luma mirror last refreshed, or null if it never has. Nothing
- * refreshes it during a page view any more — the hourly workflow is the only
- * scheduled writer — so this timestamp is the Events page's only evidence that
- * the schedule is still running. One calendar, one timestamp: it is not per
- * hackathon.
- */
-export async function getLumaSyncedAt(): Promise<string | null> {
-  const sql = getSql();
-  const [row] = await sql`SELECT last_success_at FROM hq_luma_sync WHERE id = true`;
-  const value = row?.last_success_at;
-  const at = value instanceof Date ? value.getTime() : Date.parse(String(value));
-  // The column defaults to the epoch, which means "never synced", not 1970.
-  if (!Number.isFinite(at) || at <= 0) return null;
-  return new Date(at).toISOString();
-}
-
-/**
- * Events with their derived outputs (qualified / active / verified-submission
- * counts). Mirrors the design: each project is attributed to the FIRST event
- * (by date) whose normalized name matches its event_src.
- */
-export async function getEventsWithOutputs(hackathonId: number): Promise<HqEvent[]> {
-  const sql = getSql();
-  const [events, projects, gateTotalRows] = await Promise.all([
-    sql`
-      SELECT id, name, date::text AS date, end_date::text AS end_date, type_id,
-        venue, cohost, attendance, leads, spend,
-        luma_id, luma_url, pinned_fields, archived_at, archived_reason
-      FROM hq_events
-      WHERE hackathon_id = ${hackathonId}
-      ORDER BY date, created_at
-    `,
-    sql`
-      SELECT p.id, p.event_src, s.counts_as_active,
-        (SELECT count(*)::int FROM hq_project_gates g WHERE g.project_id = p.id) AS gates_done
-      FROM hq_projects p
-      JOIN hq_project_statuses s ON s.id = p.status_id
-      WHERE p.hackathon_id = ${hackathonId}
-    `,
-    sql`
-      SELECT count(*)::int AS total FROM hq_submission_gates WHERE hackathon_id = ${hackathonId}
-    `,
-  ]);
-  const gateTotal = Number(gateTotalRows[0]?.total ?? 0);
-
-  const outputs = attributeOutputs(
-    events.map((e) => ({ id: e.id, name: e.name, archived: Boolean(e.archived_at) })),
-    projects as unknown as AttributableProject[],
-    gateTotal,
-  );
-
-  return events.map((e) => ({
-    id: e.id,
-    name: e.name,
-    date: e.date,
-    endDate: e.end_date,
-    typeId: e.type_id,
-    venue: e.venue,
-    cohost: e.cohost,
-    attendance: e.attendance,
-    leads: e.leads,
-    spend: e.spend,
-    lumaId: e.luma_id,
-    lumaUrl: e.luma_url,
-    pinned: (e.pinned_fields ?? []) as string[],
-    archived: Boolean(e.archived_at),
-    archivedReason: e.archived_reason,
-    outputs: outputs.get(e.id) ?? { q: 0, a: 0, s: 0 },
-  }));
-}
-
 export async function getAwards(hackathonId: number): Promise<Award[]> {
   const sql = getSql();
   const rows = await sql`
@@ -638,33 +563,28 @@ export async function searchAll(query: string, hackathonId: number): Promise<Sea
   const rows = await sql.query(`
     SELECT kind, id, label, meta FROM (
       (SELECT 'Project' AS kind, id, name AS label, lead_name AS meta,
-          0 AS priority, created_at, NULL::date AS event_date
+          0 AS priority, created_at
        FROM hq_projects
        WHERE hackathon_id = $1 AND (name ILIKE $2 OR lead_name ILIKE $2)
        ORDER BY created_at DESC LIMIT 12)
       UNION ALL
-      (SELECT 'Partner', pa.id, pa.name, c.label, 1, pa.created_at, NULL::date
+      (SELECT 'Partner', pa.id, pa.name, c.label, 1, pa.created_at
        FROM hq_partners pa JOIN hq_partner_channels c ON c.id = pa.channel_id
        WHERE pa.hackathon_id = $1 AND (pa.name ILIKE $2 OR pa.captain_name ILIKE $2)
        ORDER BY pa.created_at DESC LIMIT 12)
       UNION ALL
-      (SELECT 'Person', p.id, p.name, r.label, 2, p.created_at, NULL::date
+      (SELECT 'Person', p.id, p.name, r.label, 2, p.created_at
        FROM hq_people p JOIN hq_people_roles r ON r.id = p.role_id
        WHERE p.hackathon_id = $1 AND p.name ILIKE $2
        ORDER BY p.created_at DESC LIMIT 12)
-      UNION ALL
-      (SELECT 'Event', id, name, date::text AS meta, 3, NULL::timestamptz, date
-       FROM hq_events
-       WHERE hackathon_id = $1 AND name ILIKE $2
-       ORDER BY date LIMIT 12)
     ) hits
-    ORDER BY priority, created_at DESC, event_date
+    ORDER BY priority, created_at DESC
     LIMIT 12
   `, [hackathonId, like]);
   return rows.map((row) => ({
     kind: row.kind as SearchResult["kind"],
     id: row.id as string,
     label: row.label as string,
-    meta: row.kind === "Event" ? fmtDate(row.meta as string) : row.meta as string,
+    meta: row.meta as string,
   }));
 }

@@ -94,7 +94,7 @@ export function useConfirmDelete() {
 
 /**
  * Copy-to-clipboard affordance beside a contact field. No border or fill —
- * it annotates the field, the way LumaMark annotates an event name. The
+ * it annotates the field rather than competing with it. The
  * icon swaps to "Copied" for 1700ms to confirm the button actually pressed;
  * app-level toasts are a separate, additional signal.
  */

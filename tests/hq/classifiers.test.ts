@@ -43,10 +43,6 @@ describe("classifier lists", () => {
   it("reads every list in one statement, in sort order", async () => {
     await query(`INSERT INTO hq_partner_channels (label, sort) VALUES ('Second',1),('First',0)`);
     await query(
-      `INSERT INTO hq_event_types (label, supports_end_date, sort)
-       VALUES ('Hackathon',true,1),('Workshop',false,0)`,
-    );
-    await query(
       `INSERT INTO hq_people_roles (label, filter_label, color, bg, is_judge, sort)
        VALUES ('Captain','Captains','accent','accent-fill',false,1),
               ('Judge','Judges','indigo','fill-3',true,0)`,
@@ -74,10 +70,6 @@ describe("classifier lists", () => {
     const all = await classifiers();
 
     expect(all.channels.map((c) => c.label)).toEqual(["First", "Second"]);
-    expect(all.eventTypes).toEqual([
-      { id: expect.any(String), label: "Workshop", supportsEndDate: false },
-      { id: expect.any(String), label: "Hackathon", supportsEndDate: true },
-    ]);
     expect(all.roles[0]).toEqual({
       id: expect.any(String),
       label: "Judge",

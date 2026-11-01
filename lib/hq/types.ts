@@ -4,7 +4,6 @@ import type { SubmissionStatus } from "./colosseum-snapshot";
 import type { PersonRemovalImpact } from "./record-deletion";
 
 type Channel = { id: string; label: string };
-type EventType = { id: string; label: string; supportsEndDate: boolean };
 export type Role = {
   id: string;
   label: string;
@@ -44,7 +43,6 @@ export type Hackathon = {
 
 export type Classifiers = {
   channels: Channel[];
-  eventTypes: EventType[];
   roles: Role[];
   stages: Stage[];
   statuses: Status[];
@@ -197,31 +195,6 @@ export type Person = {
   removal: PersonRemovalImpact;
 };
 
-export type HqEvent = {
-  id: string;
-  name: string;
-  date: string;
-  endDate: string | null;
-  typeId: string;
-  venue: string;
-  cohost: string;
-  attendance: number;
-  leads: number;
-  spend: number;
-  /** Luma calendar id, or null for an event added by hand in HQ. */
-  lumaId: string | null;
-  lumaUrl: string;
-  /** Column names of Luma-backed fields an HQ edit has pinned. */
-  pinned: string[];
-  archived: boolean;
-  /** 'manual' survives every sync; 'missing' clears if the event returns. */
-  archivedReason: "manual" | "missing" | null;
-  // Derived from tracked projects; each project counts once, at the first
-  // event (by date) whose normalized name matches its event_src. Active
-  // events claim a name ahead of archived ones.
-  outputs: { q: number; a: number; s: number };
-};
-
 export type Award = {
   id: string;
   name: string;
@@ -269,7 +242,7 @@ export type ActivityItem = {
 export type Milestone = { id: string; date: string; label: string };
 
 export type SearchResult = {
-  kind: "Project" | "Partner" | "Person" | "Event";
+  kind: "Project" | "Partner" | "Person";
   id: string;
   label: string;
   meta: string;

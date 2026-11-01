@@ -6,8 +6,8 @@ import type { SearchResult } from "@/lib/hq/types";
 
 /**
  * Where a hit opens. The query params are the design's navigation side
- * effects (expand the project, reset the People filters, show the Events
- * list), handled by each screen.
+ * effects (expand the project, reset the People filters), handled by each
+ * screen.
  */
 function hrefFor(result: SearchResult): string {
   switch (result.kind) {
@@ -17,8 +17,6 @@ function hrefFor(result: SearchResult): string {
       return `/hq/partners/${encodeURIComponent(result.id)}`;
     case "Person":
       return "/hq/people?reset=1";
-    case "Event":
-      return "/hq/events?view=list";
   }
 }
 
@@ -89,7 +87,7 @@ export function SearchModal({ onClose }: { onClose: () => void }) {
         <input
           autoFocus
           onChange={(e) => onQuery(e.target.value)}
-          placeholder="Search projects, partners, people, events"
+          placeholder="Search projects, partners, people"
           style={{
             width: "100%",
             boxSizing: "border-box",

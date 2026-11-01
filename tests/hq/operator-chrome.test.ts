@@ -66,18 +66,18 @@ function tabs(html: string): Array<[string, string]> {
 }
 
 describe("HqChrome", () => {
-  it("shows the five section tabs in order, separated by slashes, with no Links tab", () => {
+  it("shows the four section tabs in order, separated by slashes, with no Links or Events tab", () => {
     const html = chrome("/hq");
     expect(tabs(html).map(([label]) => label)).toEqual([
       "Dashboard",
       "Projects",
       "Partners",
       "People",
-      "Events",
     ]);
-    expect(html.match(/>\/<\/span>/g)).toHaveLength(4);
+    expect(html.match(/>\/<\/span>/g)).toHaveLength(3);
     expect(html).not.toContain("Links");
     expect(html).not.toContain("/hq/links");
+    expect(html).not.toContain("/hq/events");
     expect(html).not.toMatch(FORBIDDEN);
   });
 
@@ -88,7 +88,6 @@ describe("HqChrome", () => {
     expect(activeTab("/hq/partners")).toBe("/hq/partners");
     expect(activeTab("/hq/partners/abc")).toBe("/hq/partners");
     expect(activeTab("/hq/people")).toBe("/hq/people");
-    expect(activeTab("/hq/events")).toBe("/hq/events");
     expect(activeTab("/hq/admin")).toBeNull();
     expect(activeTab("/hq/select")).toBeNull();
 

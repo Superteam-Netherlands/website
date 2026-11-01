@@ -34,7 +34,7 @@ const GRACHTENPAY = "00000000-0000-4000-8000-000000000001";
 const KAASKETEN = "00000000-0000-4000-8000-000000000002";
 
 const classifiers: Classifiers = {
-  channels: [], eventTypes: [], roles: [], stages: [], exchangeItems: [],
+  channels: [], roles: [], stages: [], exchangeItems: [],
   statuses: [
     { id: "s1", slug: "green", label: "Green", color: "green", countsAsActive: true },
     { id: "s2", slug: "amber", label: "Amber", color: "orange", countsAsActive: true },

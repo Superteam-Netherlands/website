@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 const team = "/hq/(member)/team/[id]";
 const partner = "/hq/(app)/partners/[id]";
 const projects = [
-  "/hq", "/hq/projects", "/hq/demo", "/hq/events", "/hq/partners", partner,
+  "/hq", "/hq/projects", "/hq/demo", "/hq/partners", partner,
   "/hq/people", "/hq/admin", "/hq/dashboard", "/hq/captain", "/hq/account", team,
 ];
 const reporting = ["/hq", "/hq/projects", "/hq/admin", "/hq/dashboard", "/hq/captain", team];
@@ -13,8 +13,7 @@ const reporting = ["/hq", "/hq/projects", "/hq/admin", "/hq/dashboard", "/hq/cap
 const paths = {
   projects,
   people: [...projects, "/hq/people", "/hq/account"],
-  events: ["/hq", "/hq/events", "/hq/projects", "/hq/partners", partner],
-  partners: ["/hq", "/hq/partners", partner, "/hq/events", "/hq/projects", "/hq/demo"],
+  partners: ["/hq", "/hq/partners", partner, "/hq/projects", "/hq/demo"],
   demo: ["/hq", "/hq/demo", "/hq/people"],
   reporting,
   captains: [...reporting, "/hq/people", "/hq/account", "/hq/invite/continue"],
