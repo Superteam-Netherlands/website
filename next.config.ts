@@ -8,8 +8,6 @@ const nextConfig: NextConfig = {
     return [{ source: "/hq/signin", destination: "/hq/login", permanent: true }];
   },
   images: {
-    // Luma event cover images
-    remotePatterns: [{ protocol: "https", hostname: "**.lumacdn.com" }],
     // 90 for the full-bleed illustration panels; 75 stays the default
     qualities: [75, 90],
   },
