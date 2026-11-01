@@ -27,9 +27,11 @@ describe("Colosseum People storage", () => {
   beforeEach(async () => {
     await db.query(`TRUNCATE hq_people, hq_people_roles, hq_activity, hq_login_limits CASCADE`);
     await db.query(`TRUNCATE hq_hackathons CASCADE`);
+    // Relative to today: "current" is decided against current_date, so fixed
+    // dates would hand the submission to edition 7 once edition 6 had ended.
     await db.query(`INSERT INTO hq_hackathons (id, slug, name, start_date, end_date)
-      VALUES (6, 'colosseum', 'Colosseum', '2026-09-14', '2026-10-12'),
-        (7, 'another', 'Another hackathon', '2026-10-14', '2026-11-12')`);
+      VALUES (6, 'colosseum', 'Colosseum', current_date - 14, current_date + 14),
+        (7, 'another', 'Another hackathon', current_date + 16, current_date + 46)`);
   });
 
   afterAll(async () => { await pg.close(); });

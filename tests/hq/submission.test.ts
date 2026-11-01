@@ -67,6 +67,8 @@ const BARE_PROJECT = "00000000-0000-4000-9100-000000000003";
 const IN_FINAL = Date.parse("2026-10-07T09:00:00Z");
 /** After it: local midnight ending 12 October is 2026-10-12T22:00Z. */
 const AFTER_FINAL = Date.parse("2026-10-13T06:00:00Z");
+/** The final period's first instant: local midnight starting 5 October. */
+const FINAL_START = "2026-10-04T22:00:00Z";
 
 let pg: PGlite;
 let db: BuilderDatabase;
@@ -107,6 +109,17 @@ async function seedImported(id: string, owner: string, name = "Project") {
     [id, EDITION, externalId, `https://colosseum.com/arena/projects/explore/${owner}`, owner, owner],
   );
   await rows(`INSERT INTO hq_project_members(project_id,name,colosseum_username,builder_user_id,joined_at) VALUES($1,$2,$2,$2,now())`, [id, owner]);
+}
+
+/**
+ * Enables reporting as if it happened the moment the final period opened.
+ * `enableReporting` stamps eligibility with the real `now()`, which for this
+ * fixed October 2026 edition would exempt every period once that date has
+ * passed, so the tests would depend on the day they run.
+ */
+async function enable(projectId: string, operatorId?: string) {
+  await enableReporting(db, { projectId, hackathonId: EDITION, ...(operatorId ? { operatorId } : {}) });
+  await rows(`UPDATE hq_reporting_eligibility SET eligible_from = $2 WHERE project_id = $1`, [projectId, FINAL_START]);
 }
 
 async function seedAssignedCaptain(userId: string, projectId: string) {
@@ -191,8 +204,8 @@ beforeEach(async () => {
   await rows(`INSERT INTO hq_reporting_config(hackathon_id,final_period_start_date) VALUES($1,'2026-10-05')`, [EDITION]);
   await seedImported(PROJECT_A, "alice", "Alpha");
   await seedImported(PROJECT_B, "bob", "Beta");
-  await enableReporting(db, { projectId: PROJECT_A, hackathonId: EDITION });
-  await enableReporting(db, { projectId: PROJECT_B, hackathonId: EDITION });
+  await enable(PROJECT_A);
+  await enable(PROJECT_B);
   await ensureReportingPeriods(db, EDITION);
 });
 
@@ -313,7 +326,7 @@ describe("what an authorized member is shown in the final period", () => {
 
   it("keeps Home attention on a submission after the written update is complete", async () => {
     await seedProject(BARE_PROJECT, "Manual project");
-    await enableReporting(db, { projectId: BARE_PROJECT, hackathonId: EDITION });
+    await enable(BARE_PROJECT);
     await createUpdate(alice(), { projectId: PROJECT_A, hackathonId: EDITION, body: "Ready for review.", atMs: IN_FINAL });
     const projects = [
       { id: PROJECT_A, name: "Alpha", hackathonId: EDITION },
@@ -541,7 +554,7 @@ describe("the reconciliation when the final period closes", () => {
 
   it("opens one row per accountable imported project, and none for a CRM-only project", async () => {
     await seedProject(BARE_PROJECT, "CRM only");
-    await enableReporting(db, { projectId: BARE_PROJECT, hackathonId: EDITION, operatorId: OPERATOR_ID });
+    await enable(BARE_PROJECT, OPERATOR_ID);
     await closeFinal();
     const reconciliations = await readSubmissionReconciliations(db, { projectIds: [PROJECT_A, PROJECT_B, BARE_PROJECT] });
     expect(reconciliations.map((row) => row.projectId).sort()).toEqual([PROJECT_A, PROJECT_B].sort());

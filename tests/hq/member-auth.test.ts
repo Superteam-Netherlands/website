@@ -155,7 +155,8 @@ describe("public HQ sign-in through Better Auth", () => {
     expect(user.emailVerified).toBe(true);
     expect(state.synced).toHaveBeenCalledWith({ id: user.id, email, name: "Test Builder" });
     expect((await state.pg!.query(`SELECT p.name,p.contact,r.label,p.hackathon_id FROM hq_people p JOIN hq_people_roles r ON r.id=p.role_id WHERE builder_user_id=$1`, [user.id])).rows).toEqual([
-      { name: "Test Builder", contact: email, label: "Builder", hackathon_id: 41 },
+      // No team yet, so the card is a User; Builder comes with team setup.
+      { name: "Test Builder", contact: email, label: "User", hackathon_id: 41 },
     ]);
     const cookie = signedIn.headers.get("set-cookie")!;
     // The actual Set-Cookie line, with NODE_ENV not production: the attributes follow the https origin.
