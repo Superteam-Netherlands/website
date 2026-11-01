@@ -258,13 +258,6 @@ describe("hq:reset", () => {
     expect(award.winner_project_id).toBeNull();
   });
 
-  it("rewinds the Luma throttle so the calendar re-mirrors immediately", async () => {
-    await run(`UPDATE hq_luma_sync SET last_success_at = now()`);
-    await reset();
-    const [row] = await run(`SELECT last_success_at FROM hq_luma_sync`);
-    expect(new Date(String(row.last_success_at)).getUTCFullYear()).toBe(1970);
-  });
-
   it("is safe to run twice", async () => {
     await reset();
     await expect(reset()).resolves.not.toThrow();
@@ -274,7 +267,7 @@ describe("hq:reset", () => {
   it("names every table in the schema as either cleared or kept", async () => {
     // A table added later that nobody classified would silently survive a
     // reset, which is how stale data creeps back into a "fresh" database.
-    const listed = new Set<string>([...CLEAR_TABLES, ...KEEP_TABLES, "hq_luma_sync"]);
+    const listed = new Set<string>([...CLEAR_TABLES, ...KEEP_TABLES]);
     const tables = (
       await run(
         `SELECT table_name FROM information_schema.tables

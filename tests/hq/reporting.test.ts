@@ -919,7 +919,7 @@ describe("closePeriod", () => {
   });
 
   it("refuses member actors and jobs with another audience at the service boundary", async () => {
-    for (const actor of [member("lead-a"), { kind: "job", audience: "stnl-luma-sync" } as Actor]) {
+    for (const actor of [member("lead-a"), { kind: "job", audience: "stnl-other-job" } as Actor]) {
       expect(await closePeriod(db, { periodId: periodOne, actor, atMs: AFTER_WEEK_ONE }))
         .toEqual({ ok: false, reason: "not_authorized" });
     }

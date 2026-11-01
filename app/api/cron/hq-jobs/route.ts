@@ -6,10 +6,9 @@ import { runDueWork } from "@/lib/hq/jobs";
  * the retention sweep.
  *
  * Its own audience and its own workflow file, checked by
- * `isTrustedHqJobsRequest`, so the Luma sync's identity cannot call this and
- * this job's identity cannot call the Luma sync. There is no shared secret to
- * store or rotate: GitHub's OIDC token is minted per run and verified against
- * GitHub's JWKS.
+ * `isTrustedHqJobsRequest`, so no other job's identity can call this. There is
+ * no shared secret to store or rotate: GitHub's OIDC token is minted per run
+ * and verified against GitHub's JWKS.
  *
  * Deliberately thin. Every decision, every duplicate guard and every retry
  * rule lives in `lib/hq/jobs.ts` so that it can be tested without a server, a

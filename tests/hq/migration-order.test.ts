@@ -255,10 +255,8 @@ describe("a fresh database", () => {
   it("has every hq_ table classified in the reset manifest, and nothing classified that does not exist", async () => {
     const pg = await createMigratedDatabase();
     try {
-      // hq_luma_sync is in neither list: RESET_STATEMENTS rewinds its single
-      // row with a dedicated UPDATE instead of clearing or keeping it.
       // Migration history is infrastructure state; operational resets leave it alone.
-      const listed = new Set<string>([...CLEAR_TABLES, ...KEEP_TABLES, "hq_luma_sync", "hq_migrations"]);
+      const listed = new Set<string>([...CLEAR_TABLES, ...KEEP_TABLES, "hq_migrations"]);
       const tables = await hqTables(pg);
       expect(tables.filter((t) => !listed.has(t))).toEqual([]);
       expect([...listed].filter((t) => !tables.includes(t))).toEqual([]);

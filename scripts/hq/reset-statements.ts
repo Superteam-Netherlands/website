@@ -163,6 +163,9 @@ export const KEEP_TABLES = [
   "hq_settings",
   "hq_awards",
   "hq_milestones",
+  // The retired Luma sync's timestamp row. Nothing reads or writes it now;
+  // it is kept rather than dropped, like the event rows it used to stamp.
+  "hq_luma_sync",
 ] as const;
 
 /**
@@ -176,8 +179,4 @@ export const RESET_STATEMENTS: string[] = [
   `UPDATE hq_awards SET winner_project_id = NULL`,
 
   ...CLEAR_TABLES.map((table) => `DELETE FROM ${table}`),
-
-  // Rewind the Luma throttle so the next load of /hq/events re-mirrors the
-  // calendar immediately instead of waiting out the five-minute window.
-  `UPDATE hq_luma_sync SET last_success_at = 'epoch'`,
 ];
