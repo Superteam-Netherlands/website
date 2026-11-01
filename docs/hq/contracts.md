@@ -284,8 +284,8 @@ Paths in this table are relative to `lib/hq/`, unless stated otherwise.
   outcomes are separate durable history. Reminder records count teams without
   retaining their names.
 - Job endpoints verify GitHub signature, issuer, audience, repository and immutable
-  ids, branch, allowed event/runner and exact workflow. HQ jobs and Luma use
-  separate audiences/workflows. No member/operator cookie authenticates a cron
+  ids, branch, allowed event/runner and exact workflow. Each job has its own
+  audience and workflow. No member/operator cookie authenticates a cron
   call; operator Run now is a separate gated entry to the same service.
 
 ## Submission evidence
@@ -333,7 +333,7 @@ Paths in this table are relative to `lib/hq/`, unless stated otherwise.
   to its input files. Add forward migrations, never rewrite applied history.
 - Reset classification remains explicit for every operational `hq_%` table.
   `hq_migrations` is infrastructure history and survives reset; `hq_luma_sync`
-  has a dedicated rewind. Seed configuration idempotently, never the external
+  (the retired Luma sync's timestamp row) is kept. Seed configuration idempotently, never the external
   Colosseum mapping. Fixtures contain invented identities, not real user data.
 - `tests/hq/helpers/db.ts` applies the production migration sequence to isolated
   PGlite databases. Rollback, access, privacy, deletion and idempotence need

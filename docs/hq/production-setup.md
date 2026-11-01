@@ -206,32 +206,28 @@ and select **Colosseum World's Fair** (internal HQ ID **6**).
 Colosseum public project imports and post history need no API key. Public post
 sync is independent of HQ weekly reports and does not mark a week complete.
 
-## 5. GitHub jobs and Luma
+## 5. GitHub jobs
 
 In [the canonical repository's Actions](https://github.com/Superteam-Netherlands/website/actions),
-ensure Actions is enabled and both workflows are active:
+ensure Actions is enabled and the workflow is active:
 
 | Workflow | Schedule | Production endpoint |
 | --- | --- | --- |
 | HQ reporting jobs | Every hour at :07 and :37 | `/api/cron/hq-jobs` |
-| Sync Luma events | Daily at 00:17 UTC | `/api/cron/sync-luma` |
 
-Both use GitHub's short-lived OIDC tokens, pinned to this repository and `main`.
-No GitHub job secret, `CRON_SECRET`, or Vercel Cron setup is required. They are
+It uses GitHub's short-lived OIDC tokens, pinned to this repository and `main`.
+No GitHub job secret, `CRON_SECRET`, or Vercel Cron setup is required. It is
 skipped in the mirror repository. GitHub can delay scheduled runs.
 
-After configuring the campaign and bot, run each workflow manually from **main**
+After configuring the campaign and bot, run the workflow manually from **main**
 and inspect its counts-only result. The HQ job processes due work across all
 editions, including actual reminder sends. Do not run it as a dummy-data test.
 Check the first Wednesday reminder and reporting closure in HQ Admin.
 
-The Luma mirror reads the public **`luma.com/stnl`** calendar. No Luma API key or
-webhook is required. Keep actual event information current in that calendar.
-
 ## 6. Final owner checks and recovery
 
 1. Log in at `/hq/admin/login` with your unchanged admin credentials and inspect
-   People, Partners, Events, and Admin.
+   People, Partners, and Admin.
 2. Complete a real email login, a real Telegram login, and a production bot
    `/start`. These provider checks need your credentials/account interaction.
 3. Import a real Dutch project for the configured edition and check the member,
